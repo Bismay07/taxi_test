@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:pinput/pinput.dart';
-
+import 'package:taxi_app/utils/auth_controller.dart';
 
 /// This is the basic usage of Pinput
 /// For more examples check out the demo directory
@@ -12,6 +14,7 @@ class PinputExample extends StatefulWidget {
 }
 
 class _PinputExampleState extends State<PinputExample> {
+  AuthController authController = Get.put(AuthController());
   final pinController = TextEditingController();
   final focusNode = FocusNode();
   final formKey = GlobalKey<FormState>();
@@ -60,9 +63,9 @@ class _PinputExampleState extends State<PinputExample> {
               listenForMultipleSmsOnAndroid: true,
               defaultPinTheme: defaultPinTheme,
               separatorBuilder: (index) => const SizedBox(width: 8),
-              validator: (value) {
-                return value == '222222' ? null : 'Pin is incorrect';
-              },
+              // validator: (value) {
+              //   return value == '222222' ? null : 'Pin is incorrect';
+              // },
               // onClipboardFound: (value) {
               //   debugPrint('onClipboardFound: $value');
               //   pinController.setText(value);
@@ -104,11 +107,33 @@ class _PinputExampleState extends State<PinputExample> {
             ),
           ),
           TextButton(
-            onPressed: () {
-              focusNode.unfocus();
-              formKey.currentState!.validate();
+            onPressed: () async {
+              if (pinController.text.length == 6) {
+                // Verify OTP when user enters a 6-digit OTP
+                await authController.verifyOtp(pinController.text);
+
+                // Check if phone authentication was successful
+                if (authController.phoneAuthcheck) {
+                  // Authentication was successful, you can navigate to the next screen
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Phone number verification successful!'),
+                    ),
+                  );
+
+                  // You can add navigation code here to move to the next screen
+                  // Example: Navigator.of(context).pushReplacement(...)
+                } else {
+                  // Authentication failed
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Phone number verification failed.'),
+                    ),
+                  );
+                }
+              }
             },
-            child: const Text('Validate'),
+            child: const Text('Verify OTP'),
           ),
         ],
       ),
